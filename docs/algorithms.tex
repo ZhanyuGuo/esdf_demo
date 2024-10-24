@@ -1,0 +1,198 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{ctex}               % 支持中文
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\renewcommand{\algorithmiccomment}[1]{\hfill $\triangleright$ #1}
+\usepackage{amsthm,amsmath,amssymb}
+\usepackage{bm}
+
+\begin{document}
+
+\begin{algorithm}
+    \caption{Brute Force}
+    \begin{algorithmic}[1]
+        \STATE Input: $grid \in \mathbb{R}^{m \times n}$
+        \STATE Output: $dist \in \mathbb{R}^{m \times n}$
+        \FOR{\textbf{each} $\bm{p}_1 \in grid$}
+            \FOR{\textbf{each} $\bm{p}_2 \in grid$}
+                \STATE $dist[\bm{p}_1]\gets \min(dist[\bm{p}_1], \| \bm{p}_1 - \bm{p}_2 \|_2)$
+            \ENDFOR
+        \ENDFOR
+    \end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+    \caption{Forward BFS}
+    \begin{algorithmic}[1]
+        \STATE Input: $grid \in \mathbb{R}^{m \times n}$
+        \STATE Output: $dist \in \mathbb{R}^{m \times n}$
+        \FOR{\textbf{each} $\bm{p} \in grid$}
+            \STATE $open.\mathrm{push}(\bm{p}),\ step \gets 0,\ found \gets false$
+            \WHILE{\textbf{not} $open.\mathrm{empty}()$ \textbf{and not} $found$}
+                \FOR{\textbf{each} $\bm{c} \in open$}
+                    \STATE $open.\mathrm{pop}()$
+                    \STATE $closed.\mathrm{insert}(\bm{c})$
+                    \IF{$grid[\bm{c}] == 0$}
+                        \STATE $dist[\bm{c}] \gets step,\ found \gets true$
+                        \STATE break
+                    \ENDIF
+
+                    \FOR{\textbf{each} $\bm{n} \in \bm{c}.neighbours$}
+                        \IF{$\bm{n}$ \textbf{not in} $closed$}
+                            \STATE $open.\mathrm{push}(\bm{n})$
+                        \ENDIF
+                    \ENDFOR
+                \ENDFOR
+                \STATE $step \gets step + 1$
+            \ENDWHILE
+        \ENDFOR
+    \end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+    \caption{Backward BFS}
+    \begin{algorithmic}[1]
+        \STATE Input: $grid \in \mathbb{R}^{m \times n}$
+        \STATE Output: $dist \in \mathbb{R}^{m \times n}$
+        \FOR{\textbf{each} $\bm{p} \in grid$}
+            \IF{$grid[\bm{p}] == 0$}
+                \STATE $open.\mathrm{push}(\bm{p})$
+            \ENDIF
+        \ENDFOR
+        \STATE $step \gets 0$
+        \WHILE{\textbf{not} $open.\mathrm{empty}()$}
+            \FOR{\textbf{each} $\bm{c} \in open$}
+                \STATE $open.\mathrm{pop}()$
+                \STATE $closed.\mathrm{insert}(\bm{c})$
+                \STATE $dist[\bm{c}] \gets step$
+
+                \FOR{\textbf{each} $\bm{n} \in \bm{c}.neighbours$}
+                    \IF{$\bm{n}$ \textbf{not in} $closed$}
+                        \STATE $open.push(\bm{n})$
+                    \ENDIF
+                \ENDFOR
+            \ENDFOR
+            \STATE $step \gets step + 1$
+        \ENDWHILE
+    \end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+    \caption{L1 DP}
+    \begin{algorithmic}[1]
+        \STATE Input: $grid \in \mathbb{R}^{m \times n}$
+        \STATE Output: $dist \in \mathbb{R}^{m \times n}$
+
+        \FOR{\textbf{each} $\bm{p} \in grid$}
+            \IF{$grid[\bm{p}] == 0$}
+                \STATE $dist[\bm{p}] \gets 0$
+            \ENDIF
+        \ENDFOR
+
+        \FOR{$x=0$ \TO $m-1$}
+            \FOR{$y=0$ \TO $n-1$}
+                \STATE $dist[x][y] \gets \min(dist[x][y], dist[x - 1][y] + 1)$
+                \STATE $dist[x][y] \gets \min(dist[x][y], dist[x ][y - 1] + 1)$
+            \ENDFOR
+        \ENDFOR
+
+        \FOR{$x=m-1$ \TO $0$}
+            \FOR{$y=n-1$ \TO $0$}
+                \STATE $dist[x][y] \gets \min(dist[x][y], dist[x + 1][y] + 1)$
+                \STATE $dist[x][y] \gets \min(dist[x][y], dist[x ][y + 1] + 1)$
+            \ENDFOR
+        \ENDFOR
+    \end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+    \caption{Distance Transform 1D}
+    \begin{algorithmic}[1]
+        \STATE Input: $f: \mathbb{R} \to \mathbb{R}$
+        \STATE Output: $dist \in \mathbb{R}^n$
+
+        \STATE $k \gets 0$
+        \COMMENT{Index of rightmost parabola in lower envelope}
+        \STATE $v[0] \gets 0$
+        \COMMENT{Locations of parabolas in lower envelope}
+        \STATE $z[0] \gets -\infty,\ z[1] \gets +\infty$
+        \COMMENT{Locations of boundaries between parabolas}
+
+        \FOR{$q=1$ \TO $n-1$}
+            \STATE $s \gets ((f(q) + q^2) - (f(v[k]) + v[k]^2)) / (2q-2v[k])$
+            \WHILE{$s \leq z[k]$}
+                \STATE $k \gets k-1$
+                \STATE $s \gets ((f(q) + q^2) - (f(v[k]) + v[k]^2)) / (2q-2v[k])$
+            \ENDWHILE
+            \STATE $k \gets k + 1$
+            \STATE $v[k] \gets q$
+            \STATE $z[k] \gets s,\ z[k+1] \gets +\infty$
+        \ENDFOR
+
+        \STATE $k \gets 0$
+
+        \FOR{$q=0$ \TO $n-1$}
+            \WHILE{$z[k+1] < q$}
+                \STATE $k \gets k+1$
+            \ENDWHILE
+            \STATE $dist[q] \gets (q-v[k]^2) + f(v[k])$
+        \ENDFOR
+    \end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+    \caption{Incremental Backward BFS}
+    \begin{algorithmic}[1]
+        \STATE Input: $grid \in \mathbb{R}^{m \times n},\ insertQueue,\ deleteQueue$
+        \STATE Output: $dist \in \mathbb{R}^{m \times n}$
+
+        \WHILE{\textbf{not} $insertQueue.\mathrm{empty}()$}
+            \STATE $cur \gets insertQueue.\mathrm{front}()$
+            \STATE $insertQueue.\mathrm{pop}()$
+            \STATE $\mathrm{deleteFrom}(cur.coc, cur.pos)$
+            \STATE $cur.coc \gets cur.pos$
+            \STATE $cur.dis \gets 0$
+            \STATE $\mathrm{insertTo}(cur.coc, cur.pos)$
+            \STATE $updateQueue.\mathrm{push}(cur)$
+        \ENDWHILE
+
+        \WHILE{\textbf{not} $deleteQueue.\mathrm{empty}()$}
+            \STATE $cur \gets deleteQueue.\mathrm{front}()$
+            \STATE $deleteQueue.\mathrm{pop}()$
+            \FOR{\textbf{each} $vox \in cur.dll$}
+                \STATE $\mathrm{deleteFrom}(vox.coc, vox.pos)$
+                \STATE $vox.coc \gets \mathcal{IP}$
+                \STATE $vox.dis \gets \infty$
+
+                \FOR{\textbf{each} $nbr \in vox.nbrs$}
+                    \IF{$nbr.coc$ \textbf{exists and} $\mathrm{getDist}(nbr.coc, vox.pos) < vox.dis$}
+                        \STATE $vox.dis \gets \mathrm{getDist}(nbr.coc, vox.pos)$
+                        \STATE $vox.coc \gets nbr.coc$
+                    \ENDIF
+                \ENDFOR
+
+                \STATE $\mathrm{insertTo}(vox.coc, vox.pos)$
+                \IF{$vox.coc$ \textbf{is not} $\mathcal{IP}$}
+                    \STATE $updateQueue.\mathrm{push}(vox)$
+                \ENDIF
+            \ENDFOR
+        \ENDWHILE
+
+        \WHILE{\textbf{not} $updateQueue.\mathrm{empty}()$}
+            \STATE $cur \gets updateQueue.\mathrm{front}()$
+            \STATE $updateQueue.\mathrm{pop}()$
+            \FOR{\textbf{each} $nbr \in cur.nbrs$}
+                \IF{$\mathrm{getDist}(cur.coc, nbr.pos) < nbr.dis$}
+                    \STATE $nbr.dis \gets \mathrm{getDist}(cur.coc, nbr.pos)$
+                    \STATE $\mathrm{deleteFrom}(nbr.coc, nbr.pos)$
+                    \STATE $nbr.coc \gets cur.coc$
+                    \STATE $\mathrm{insertTo}(nbr.coc, nbr.pos)$
+                    \STATE $updateQueue.\mathrm{push}(nbr)$
+                \ENDIF
+            \ENDFOR
+        \ENDWHILE
+    \end{algorithmic}
+\end{algorithm}
+
+\end{document}

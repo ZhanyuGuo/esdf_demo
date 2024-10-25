@@ -25,7 +25,7 @@
 
 ### L2 distance
 
-![BackwardBFSL1](results/BackwardBFSL2.gif)
+![BackwardBFSL2](results/BackwardBFSL2.gif)
 
 ## <span id="4">4. Sweep Dynamic Programming (L1 distance)
 

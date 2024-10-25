@@ -14,9 +14,9 @@
     \begin{algorithmic}[1]
         \STATE Input: $grid \in \mathbb{R}^{m \times n}$
         \STATE Output: $dist \in \mathbb{R}^{m \times n}$
-        \FOR{\textbf{each} $\bm{p}_1 \in grid$}
-            \FOR{\textbf{each} $\bm{p}_2 \in grid$}
-                \STATE $dist[\bm{p}_1]\gets \min(dist[\bm{p}_1], \| \bm{p}_1 - \bm{p}_2 \|_2)$
+        \FOR{\textbf{each} $\bm{p} \in grid$}
+            \FOR{\textbf{each} $\bm{o} \in grid$ \textbf{and} $grid[\bm{o}]$ \textbf{is} $0$}
+                \STATE $dist[\bm{p}]\gets \min(dist[\bm{p}], \| \bm{p} - \bm{o} \|_2)$
             \ENDFOR
         \ENDFOR
     \end{algorithmic}
@@ -33,15 +33,13 @@
                 \FOR{\textbf{each} $\bm{c} \in open$}
                     \STATE $open.\mathrm{pop}()$
                     \STATE $closed.\mathrm{insert}(\bm{c})$
-                    \IF{$grid[\bm{c}] == 0$}
+                    \IF{$grid[\bm{c}]$ \textbf{is} $0$}
                         \STATE $dist[\bm{c}] \gets step,\ found \gets true$
                         \STATE break
                     \ENDIF
 
-                    \FOR{\textbf{each} $\bm{n} \in \bm{c}.neighbours$}
-                        \IF{$\bm{n}$ \textbf{not in} $closed$}
-                            \STATE $open.\mathrm{push}(\bm{n})$
-                        \ENDIF
+                    \FOR{\textbf{each} $\bm{n} \in \bm{c}.neighbours$ \textbf{not in} $closed$}
+                        \STATE $open.\mathrm{push}(\bm{n})$
                     \ENDFOR
                 \ENDFOR
                 \STATE $step \gets step + 1$
@@ -56,7 +54,7 @@
         \STATE Input: $grid \in \mathbb{R}^{m \times n}$
         \STATE Output: $dist \in \mathbb{R}^{m \times n}$
         \FOR{\textbf{each} $\bm{p} \in grid$}
-            \IF{$grid[\bm{p}] == 0$}
+            \IF{$grid[\bm{p}]$ \textbf{is} $0$}
                 \STATE $open.\mathrm{push}(\bm{p})$
             \ENDIF
         \ENDFOR
@@ -67,10 +65,8 @@
                 \STATE $closed.\mathrm{insert}(\bm{c})$
                 \STATE $dist[\bm{c}] \gets step$
 
-                \FOR{\textbf{each} $\bm{n} \in \bm{c}.neighbours$}
-                    \IF{$\bm{n}$ \textbf{not in} $closed$}
-                        \STATE $open.push(\bm{n})$
-                    \ENDIF
+                \FOR{\textbf{each} $\bm{n} \in \bm{c}.neighbours$ \textbf{not in} $closed$}
+                    \STATE $open.push(\bm{n})$
                 \ENDFOR
             \ENDFOR
             \STATE $step \gets step + 1$
@@ -85,7 +81,7 @@
         \STATE Output: $dist \in \mathbb{R}^{m \times n}$
 
         \FOR{\textbf{each} $\bm{p} \in grid$}
-            \IF{$grid[\bm{p}] == 0$}
+            \IF{$grid[\bm{p}]$ \textbf{is} $0$}
                 \STATE $dist[\bm{p}] \gets 0$
             \ENDIF
         \ENDFOR
@@ -103,6 +99,33 @@
                 \STATE $dist[x][y] \gets \min(dist[x][y], dist[x ][y + 1] + 1)$
             \ENDFOR
         \ENDFOR
+    \end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+    \caption{Backward BFS with COC}
+    \begin{algorithmic}[1]
+        \STATE Input: $grid \in \mathbb{R}^{m \times n}$
+        \STATE Output: $dist \in \mathbb{R}^{m \times n}$
+        \STATE $open \gets \mathrm{Priority Queue}()$
+        \FOR{\textbf{each} $\bm{p} \in grid$}
+            \IF{$grid[\bm{p}]$ \textbf{is} $0$}
+                \STATE $\bm{p}.dis \gets 0,\ \bm{p}.coc \gets \bm{p}$
+                \STATE $open.\mathrm{push}(\bm{p})$
+            \ENDIF
+        \ENDFOR
+        \WHILE{\textbf{not} $open.\mathrm{empty}()$}
+            \STATE $\bm{c} \gets open.\mathrm{front}(),\ open.\mathrm{pop}()$
+            \STATE $closed.\mathrm{insert}(\bm{c})$
+            \STATE $dist[\bm{c}] \gets \bm{c}.dis$
+
+            \FOR{\textbf{each} $\bm{n} \in \bm{c}.neighbours$ \textbf{not in} $closed$}
+                \IF{$\mathrm{getDist}(\bm{n}, \bm{c}.coc) < \bm{n}.dis$}
+                    \STATE $\bm{n}.dis \gets \mathrm{getDist}(\bm{n}, \bm{c}.coc),\ \bm{n}.coc \gets \bm{c}.coc$
+                    \STATE $open.\mathrm{push}(\bm{n})$
+                \ENDIF
+            \ENDFOR
+        \ENDWHILE
     \end{algorithmic}
 \end{algorithm}
 
@@ -148,51 +171,56 @@
         \STATE Output: $dist \in \mathbb{R}^{m \times n}$
 
         \WHILE{\textbf{not} $insertQueue.\mathrm{empty}()$}
-            \STATE $cur \gets insertQueue.\mathrm{front}()$
+            \STATE $\bm{p} \gets insertQueue.\mathrm{front}()$
             \STATE $insertQueue.\mathrm{pop}()$
-            \STATE $\mathrm{deleteFrom}(cur.coc, cur.pos)$
-            \STATE $cur.coc \gets cur.pos$
-            \STATE $cur.dis \gets 0$
-            \STATE $\mathrm{insertTo}(cur.coc, cur.pos)$
-            \STATE $updateQueue.\mathrm{push}(cur)$
+            \STATE $\mathrm{deleteFromDLL}(\bm{p}.coc, \bm{p})$
+            \STATE $\bm{p}.dis \gets 0,\ \bm{p}.coc \gets \bm{p}$
+            \STATE $\mathrm{insertToDLL}(\bm{p}.coc, \bm{p})$
+            \STATE $updateQueue.\mathrm{push}(\bm{p})$
         \ENDWHILE
 
         \WHILE{\textbf{not} $deleteQueue.\mathrm{empty}()$}
-            \STATE $cur \gets deleteQueue.\mathrm{front}()$
+            \STATE $\bm{p} \gets deleteQueue.\mathrm{front}()$
             \STATE $deleteQueue.\mathrm{pop}()$
-            \FOR{\textbf{each} $vox \in cur.dll$}
-                \STATE $\mathrm{deleteFrom}(vox.coc, vox.pos)$
-                \STATE $vox.coc \gets \mathcal{IP}$
-                \STATE $vox.dis \gets \infty$
+            \FOR{\textbf{each} $\bm{c} \in \bm{p}.dll$}
+                \STATE $\mathrm{deleteFrom}(\bm{c}.coc, \bm{c})$
+                \STATE $\bm{c}.dis \gets \infty,\ \bm{c}.coc \gets \mathcal{IP}$
 
-                \FOR{\textbf{each} $nbr \in vox.nbrs$}
-                    \IF{$nbr.coc$ \textbf{exists and} $\mathrm{getDist}(nbr.coc, vox.pos) < vox.dis$}
-                        \STATE $vox.dis \gets \mathrm{getDist}(nbr.coc, vox.pos)$
-                        \STATE $vox.coc \gets nbr.coc$
+                \FOR{\textbf{each} $\bm{n} \in \bm{c}.neighbours$}
+                    \IF{$\bm{n}.coc$ \textbf{exists and} $\mathrm{getDist}(\bm{n}.coc, \bm{c}) < \bm{c}.dis$}
+                        \STATE $\bm{c}.dis \gets \mathrm{getDist}(\bm{n}.coc, \bm{c}),\ \bm{c}.coc \gets \bm{n}.coc$
                     \ENDIF
                 \ENDFOR
 
-                \STATE $\mathrm{insertTo}(vox.coc, vox.pos)$
-                \IF{$vox.coc$ \textbf{is not} $\mathcal{IP}$}
-                    \STATE $updateQueue.\mathrm{push}(vox)$
-                \ENDIF
-            \ENDFOR
-        \ENDWHILE
-
-        \WHILE{\textbf{not} $updateQueue.\mathrm{empty}()$}
-            \STATE $cur \gets updateQueue.\mathrm{front}()$
-            \STATE $updateQueue.\mathrm{pop}()$
-            \FOR{\textbf{each} $nbr \in cur.nbrs$}
-                \IF{$\mathrm{getDist}(cur.coc, nbr.pos) < nbr.dis$}
-                    \STATE $nbr.dis \gets \mathrm{getDist}(cur.coc, nbr.pos)$
-                    \STATE $\mathrm{deleteFrom}(nbr.coc, nbr.pos)$
-                    \STATE $nbr.coc \gets cur.coc$
-                    \STATE $\mathrm{insertTo}(nbr.coc, nbr.pos)$
-                    \STATE $updateQueue.\mathrm{push}(nbr)$
+                \STATE $\mathrm{insertToDLL}(\bm{c}.coc, \bm{c})$
+                \IF{$\bm{c}.coc$ \textbf{is not} $\mathcal{IP}$}
+                    \STATE $updateQueue.\mathrm{push}(\bm{c})$
                 \ENDIF
             \ENDFOR
         \ENDWHILE
     \end{algorithmic}
 \end{algorithm}
+
+\begin{algorithm}
+    \caption{Incremental Backward BFS Part II}
+    \begin{algorithmic}[1]
+        \STATE Input: $grid \in \mathbb{R}^{m \times n},\ insertQueue,\ deleteQueue$
+        \STATE Output: $dist \in \mathbb{R}^{m \times n}$
+
+        \WHILE{\textbf{not} $updateQueue.\mathrm{empty}()$}
+            \STATE $\bm{c} \gets updateQueue.\mathrm{front}(),\ updateQueue.\mathrm{pop}()$
+            \FOR{\textbf{each} $\bm{n} \in \bm{c}.neighbours$}
+                \IF{$\mathrm{getDist}(\bm{c}.coc, \bm{n}) < \bm{n}.dis$}
+                    \STATE $\bm{n}.dis \gets \mathrm{getDist}(\bm{c}.coc, \bm{n})$
+                    \STATE $\mathrm{deleteFromDLL}(\bm{n}.coc, \bm{n})$
+                    \STATE $\bm{n}.coc \gets \bm{c}.coc$
+                    \STATE $\mathrm{insertToDLL}(\bm{n}.coc, \bm{n})$
+                    \STATE $updateQueue.\mathrm{push}(\bm{n})$
+                \ENDIF
+            \ENDFOR
+        \ENDWHILE
+    \end{algorithmic}
+\end{algorithm}
+
 
 \end{document}

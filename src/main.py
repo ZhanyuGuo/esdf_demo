@@ -7,7 +7,9 @@ from methods import BackwardBFS, BackwardBFSL2, BruteForce, CVDistanceTransform,
 
 def main():
     grid_file = "assets/grid.bmp"
+    output_path = "./results/"
     new_size = (80, 60)
+    # new_size = (64, 48)
     # new_size = (32, 24)
     # new_size = (16, 12)
 
@@ -19,27 +21,32 @@ def main():
     # cv.waitKey(0)
     # cv.destroyAllWindows()
 
-    # esdf = CVDistanceTransform(grid=grid, output_path="./results/")
-    # esdf = BruteForce(grid=grid, output_path="./results/")
-    # esdf = ForwardBFS(grid=grid, output_path="./results/")
-    # esdf = BackwardBFS(grid=grid, output_path="./results/")
-    # esdf = SweepDP(grid=grid, output_path="./results/")
-    # esdf = DistanceTransform(grid=grid, output_path="./results/")
-    # esdf = BackwardBFSL2(grid=grid, output_path="./results/")
+    ## normal
+    # esdf = CVDistanceTransform(grid=grid, output_path=output_path)
+    # esdf = BruteForce(grid=grid, output_path=output_path)
+    # esdf = ForwardBFS(grid=grid, output_path=output_path)
+    # esdf = BackwardBFS(grid=grid, output_path=output_path)
+    # esdf = SweepDP(grid=grid, output_path=output_path)
+    # esdf = DistanceTransform(grid=grid, output_path=output_path)
+    # esdf = BackwardBFSL2(grid=grid, output_path=output_path)
+    
     # esdf.updateESDF()
     # esdf.show()
 
+    ## incremental
     ori_grid = np.ones_like(grid, dtype=np.int32)
-    esdf = IncreBackwardBFSL2(grid=ori_grid, output_path="./results/")
+    esdf = IncreBackwardBFSL2(grid=ori_grid, output_path=output_path)
     grid = grid.astype(np.int32)
     esdf.updateESDF(grid)
 
     esdf.updateDistFig(forced=True)
     plt.pause(1)
+    for _ in range(30):
+        esdf.frame_list.append(np.array(esdf.fig.canvas.renderer.buffer_rgba()))
 
     grid = grid.copy()
-    grid[22:40, 9:22] = 1
-    grid[20:28, 5:13] = 0
+    grid[30:44, 12:25] = 1
+    grid[46:56, 6:16] = 0
     esdf.updateESDF(grid)
 
     esdf.show()

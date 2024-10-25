@@ -9,10 +9,10 @@ from utils import Node
 
 
 class IncreBackwardBFSL2(ESDF):
-    def __init__(self, grid: np.ndarray, has_vis=True, vis_interval=0.01, acc_rate=50, frame_rate=24, output_path="") -> None:
-        super().__init__(grid=grid, has_vis=has_vis, vis_interval=vis_interval, acc_rate=acc_rate, frame_rate=frame_rate, output_path=output_path)
+    def __init__(self, grid: np.ndarray, has_vis=True, vis_interval=0.01, frame_interval=100, frame_rate=30, output_path="") -> None:
+        super().__init__(grid=grid, has_vis=has_vis, vis_interval=vis_interval, frame_interval=frame_interval, frame_rate=frame_rate, output_path=output_path)
 
-        self.node_map = [[Node(np.array([x, y]), np.array([np.inf, np.inf]), np.inf) for y in range(self.cols)] for x in range(self.rows)]
+        self.node_map = [[Node(np.array([x, y])) for y in range(self.cols)] for x in range(self.rows)]
         self.head = [-1 for _ in range(self.rows * self.cols)]
         self.prev = [-1 for _ in range(self.rows * self.cols)]
         self.next = [-1 for _ in range(self.rows * self.cols)]
@@ -76,18 +76,6 @@ class IncreBackwardBFSL2(ESDF):
                     # 1 - 0, new freed
                     delete_q.put((x, y))
 
-        while not insert_q.empty():
-            x, y = insert_q.get()
-            self.deleteFromDLL(self.node_map[x][y].coc, self.node_map[x][y].pos)
-
-            self.node_map[x][y].dis = 0
-            self.node_map[x][y].coc = self.node_map[x][y].pos
-            self.dist[x][y] = self.node_map[x][y].dis
-            self.updateDistFig()
-
-            self.insertToDLL(self.node_map[x][y].coc, self.node_map[x][y].pos)
-            update_q.put((x, y))
-
         while not delete_q.empty():
             x, y = delete_q.get()
 
@@ -102,8 +90,7 @@ class IncreBackwardBFSL2(ESDF):
                 nxt_idx = self.next[c_idx]
                 self.deleteFromDLL(self.node_map[cx][cy].coc, self.node_map[cx][cy].pos)
 
-                self.node_map[cx][cy].dis = np.inf
-                self.node_map[cx][cy].coc = np.array([np.inf, np.inf])
+                self.node_map[cx][cy].dis, self.node_map[cx][cy].coc = np.inf, np.array([np.inf, np.inf])
                 self.dist[cx][cy] = self.node_map[cx][cy].dis
                 self.updateDistFig()
 
@@ -113,13 +100,15 @@ class IncreBackwardBFSL2(ESDF):
                     if not self.checkPos(nx, ny):
                         continue
 
+                    if self.node_map[nx][ny].coc[0] == np.inf:
+                        continue
+
                     if self.grid[self.node_map[nx][ny].coc[0]][self.node_map[nx][ny].coc[1]] == 1:
                         continue
 
                     dis = self.getDist(self.node_map[nx][ny].coc, self.node_map[cx][cy].pos)
                     if dis < self.node_map[cx][cy].dis:
-                        self.node_map[cx][cy].dis = dis
-                        self.node_map[cx][cy].coc = self.node_map[nx][ny].coc
+                        self.node_map[cx][cy].dis, self.node_map[cx][cy].coc = dis, self.node_map[nx][ny].coc
                         self.dist[cx][cy] = self.node_map[cx][cy].dis
                         self.updateDistFig()
 
@@ -128,6 +117,17 @@ class IncreBackwardBFSL2(ESDF):
                     update_q.put((cx, cy))
 
                 c_idx = nxt_idx
+
+        while not insert_q.empty():
+            x, y = insert_q.get()
+            self.deleteFromDLL(self.node_map[x][y].coc, self.node_map[x][y].pos)
+
+            self.node_map[x][y].dis, self.node_map[x][y].coc = 0, self.node_map[x][y].pos
+            self.dist[x][y] = self.node_map[x][y].dis
+            self.updateDistFig()
+
+            self.insertToDLL(self.node_map[x][y].coc, self.node_map[x][y].pos)
+            update_q.put((x, y))
 
         while not update_q.empty():
             cx, cy = update_q.get()
@@ -142,8 +142,7 @@ class IncreBackwardBFSL2(ESDF):
                 if dis < self.node_map[nx][ny].dis:
                     self.deleteFromDLL(self.node_map[nx][ny].coc, self.node_map[nx][ny].pos)
 
-                    self.node_map[nx][ny].dis = dis
-                    self.node_map[nx][ny].coc = self.node_map[cx][cy].coc
+                    self.node_map[nx][ny].dis, self.node_map[nx][ny].coc = dis, self.node_map[cx][cy].coc
                     self.dist[nx][ny] = self.node_map[nx][ny].dis
                     self.updateDistFig()
 

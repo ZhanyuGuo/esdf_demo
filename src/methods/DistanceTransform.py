@@ -1,16 +1,13 @@
-import queue
-
 import numpy as np
 
 from ESDF import ESDF
 
 
 class DistanceTransform(ESDF):
-    def __init__(self, grid: np.ndarray, has_vis=True, vis_interval=0.01, acc_rate=50, frame_rate=24, output_path="") -> None:
-        super().__init__(grid=grid, has_vis=has_vis, vis_interval=vis_interval, acc_rate=acc_rate, frame_rate=frame_rate, output_path=output_path)
+    def __init__(self, grid: np.ndarray, has_vis=True, vis_interval=0.01, frame_interval=100, frame_rate=30, output_path="") -> None:
+        super().__init__(grid=grid, has_vis=has_vis, vis_interval=vis_interval, frame_interval=frame_interval, frame_rate=frame_rate, output_path=output_path)
 
         self.square_dist = np.full(self.grid.shape, np.inf)
-
 
     def distanceTransform1D(self, pos, dim=0):
         if dim not in [0, 1]:
@@ -38,12 +35,13 @@ class DistanceTransform(ESDF):
             while z[k + 1] < q:
                 k += 1
 
+            dq = (q - v[k]) ** 2 + f[v[k]]
             if dim == 0:
-                self.square_dist[q, pos] = (q - v[k]) ** 2 + f[v[k]]
-                self.dist[q, pos] = np.sqrt(self.square_dist[q, pos])
+                self.square_dist[q, pos] = dq
+                self.dist[q, pos] = np.sqrt(dq)
             else:
-                self.square_dist[pos, q] = (q - v[k]) ** 2 + f[v[k]]
-                self.dist[pos, q] = np.sqrt(self.square_dist[pos, q])
+                self.square_dist[pos, q] = dq
+                self.dist[pos, q] = np.sqrt(dq)
 
             self.updateDistFig()
 
@@ -60,5 +58,3 @@ class DistanceTransform(ESDF):
 
         for j in range(self.cols):
             self.distanceTransform1D(j, dim=0)
-
-        # self.dist = np.sqrt(self.dist)

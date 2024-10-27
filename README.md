@@ -1,5 +1,13 @@
 # ESDF Demo
 
+## Requirements
+
+```bash
+conda create -n esdf_demo
+conda activate esdf_demo
+pip install numpy matplotlib opencv-python imageio
+```
+
 ## Contents
 
 1. [Brute-Force (Any distance)](#1)
